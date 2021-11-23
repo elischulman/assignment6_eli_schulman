@@ -1,0 +1,56 @@
+---
+title: "Lizards"
+author: "Eli Schulman"
+date: "11/23/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(here)
+library(janitor)
+library(broom)
+library(ggbeeswarm)
+
+```
+
+
+```{r}
+# read in OG data
+lizards_original <- read_csv(here("data", "lizards.csv"))
+
+# create simplified df for use
+lizards <- lizards_original %>% 
+  select(spp, total_length, sex) %>% 
+  filter(sex == "F", spp %in% c("CNUN", "CNTE"))
+```
+
+
+```{r}
+# visualize differences in total lengths between species
+ggplot(lizards, aes(x = spp, y = total_length)) +
+  geom_jitter(aes(color = spp)) +
+  stat_summary(fun.y = "mean",
+               fill = "goldenrod4",
+               col = "black",
+               shape = 23)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
