@@ -6,25 +6,80 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(here)
+library(janitor)
+library(broom)
+library(kableExtra)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r}
+# read in original data
+surveys <- read_csv(here("data","conservation_survey.csv")) 
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+# create simple df for just librals and conservatives
+surveys_clean <- surveys %>% 
+  clean_names() %>% 
+  select(env_id, pol_or) %>% 
+  mutate(affiliation = case_when(
+    pol_or %in% c(1:3) ~ "conservative",
+    pol_or %in% c(5:7) ~ "libral"
+  )) %>% 
+  mutate(env_id = case_when(
+    env_id == 1 ~ "Yes",
+    env_id == 2 ~ "No",
+    env_id == 3 ~ "Unsure"
+  )) %>% 
+  drop_na(affiliation)
 ```
 
-## Including Plots
+```{r}
+# create table to display affiliation and environmental concern
+pol_env <- surveys_clean %>% 
+# select columns
+  tabyl(affiliation, env_id) %>% 
+# change counts to percentages and change formatting
+  adorn_percentages() %>% 
+  adorn_pct_formatting(digits = 0) %>% 
+# include counts along with percentages
+  adorn_ns()
 
-You can also embed plots, for example:
+# reoder the column headers of the table
+pol_env <- pol_env[, c(1, 4, 2, 3)]
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+kable(pol_env,
+      caption = str_wrap("Association Between Political Affiliation and Self-Identification as an Environmentalist")) %>% 
+  kable_styling(full_width = FALSE)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+# create contingency table for counts of environmentalists and political affiliation
+pol_env_counts <- surveys_clean %>% 
+  tabyl(affiliation, env_id) %>% 
+  column_to_rownames(var = "affiliation")
+
+# run chi-square test
+pol_env_x2 <- chisq.test(pol_env_counts)
+
+#use broom::tidy to make df of chi-square results
+pol_env_tidy <- tidy(pol_env_x2)
+pol_env_tidy
+```
+
+There is a significant association between one's political party and whether they consider themselves an environmentalist ($\chi$^2^(`r pol_env_tidy$parameter`) = `r round(pol_env_tidy$statistic, 2)`. *p* `r if(pol_env_tidy$p.value < .001){"< .001"}else{pol_env_tidy$p.value}`). Of conservatives surveyed, only `r pol_env[1,2]` self-identified as environmentalists, while `r pol_env[1,3]` responded that they were not environmentalists and `r pol_env[1,4]` responded as "unsure". Alternatively, of librals surveyed, `r pol_env[2,2]` self-identified as environmentalists, while `r pol_env[2,3]` and `r pol_env[2,4]` responded as "no" or "unsure" to the question.
+
+***NEED TO EXPLAIN THE RESULTS MORE. NOT IN STATS LINGO. TALK ABOUT PERCENTAGES. QUESTION: THE PERCENTAGES RELATE TO THE ROW TOTAL (I.E. 54% OF CONSERVATIVES), BUT NOT THE COLUMN TOTAL (I.E. X% OF ENVIRONMENTALISTS). IS THAT THE LIMITATION? ***
+
+
+
+
+
+
+
+
+
+
+
+
