@@ -12,7 +12,7 @@ library(here)
 library(janitor)
 library(broom)
 library(ggbeeswarm)
-
+library(kableExtra)
 ```
 
 
@@ -30,14 +30,53 @@ lizards <- lizards_original %>%
 ```{r}
 # visualize differences in total lengths between species
 ggplot(lizards, aes(x = spp, y = total_length)) +
-  geom_jitter(aes(color = spp)) +
+  geom_jitter(aes(color = spp),
+              show.legend = TRUE) +
   stat_summary(fun.y = "mean",
                fill = "goldenrod4",
                col = "black",
-               shape = 23)
+               shape = 23) +
+  labs(title = "Lengths of Female Colorado Checkered and Desert Grassland Lizards",
+       x = "Species",
+       y = "Length (mm)",
+       caption = "Mean length for each lizard shown by golden diamond",
+       color = "Species") +
+  scale_x_discrete(labels = c("Colorado Checkered Lizard", "Desert Grassland Lizard")) +
+  theme(plot.title = element_text(face = "bold", hjust = .5),
+        legend.position = "none") +
+  scale_colour_manual(values = c("red", "blue"))
 
 ```
 
+```{r}
+# Mean comparissons table
+spp_means <- lizards %>% 
+  mutate(species = case_when(
+    spp == "CNTE" ~ "Desert Grassland Lizard",
+    spp == "CNUN" ~ "Colorado Checkered Lizard"
+  )) %>% 
+  group_by(species) %>% 
+  summarize(mean = round(mean(total_length, na.rm = TRUE), 2),
+            sd = round(sd(total_length, na.rm = TRUE), 2),
+            sample_size = n())
+
+kable(spp_means, 
+      caption = "<center><strong>Female Desert Grassland and Colorado Checkered Lizards</strong></center>",
+      col = c("Species", "Mean (mm)", "Standard Deviation (mm)", "Sample Size")) %>% 
+  kable_styling(full_width = FALSE,
+                position = "left")
+  
+```
+
+```{r}
+# create vectors to explore normality between species lengths
+
+## To do for this task 
+## 1. create vectors
+## 2. normal graphs, hist, QQ
+## 3. two tailed test and cohens.d
+## talk about it 
+```
 
 
 
