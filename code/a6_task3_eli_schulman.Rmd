@@ -1,20 +1,21 @@
 ---
-title: "Lizards"
+title: "Female Lizard Lengths (Colorado Checkered vs Desert Grassland)"
 author: "Eli Schulman"
-date: "11/23/2021"
 output: html_document
 ---
 
+***Introduction: *** The report compares body lengths between female Colorado Checkered and Desert Grassland lizards. First, the sampled body lengths of each lizard are visualized and their respective length statistics are listed in a table. Then, a two-sample t-test and Cohen's d test are used to show significance between observed differences in the two species' respective average lengths. 
+
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 library(tidyverse)
 library(here)
 library(janitor)
 library(broom)
 library(ggbeeswarm)
 library(kableExtra)
+library(effsize)
 ```
-
 
 ```{r}
 # read in OG data
@@ -23,23 +24,23 @@ lizards_original <- read_csv(here("data", "lizards.csv"))
 # create simplified df for use
 lizards <- lizards_original %>% 
   select(spp, total_length, sex) %>% 
-  filter(sex == "F", spp %in% c("CNUN", "CNTE"))
+  filter(sex == "F", spp %in% c("CNUN", "CNTE")) 
 ```
-
-
+## Visualization
 ```{r}
 # visualize differences in total lengths between species
 ggplot(lizards, aes(x = spp, y = total_length)) +
   geom_jitter(aes(color = spp),
               show.legend = TRUE) +
+  theme_minimal() +
   stat_summary(fun.y = "mean",
                fill = "goldenrod4",
                col = "black",
                shape = 23) +
-  labs(title = "Lengths of Female Colorado Checkered and Desert Grassland Lizards",
+  labs(title = "Female Colorado Checkered vs Desert Grassland Lizards",
        x = "Species",
        y = "Length (mm)",
-       caption = "Mean length for each lizard shown by golden diamond",
+       caption = str_wrap("Figure 1: Shows the distribution in lengths between females in the two lizard species sampled at the Jornada Basin. The mean length of each species is represented by the golden diamond. "),
        color = "Species") +
   scale_x_discrete(labels = c("Colorado Checkered Lizard", "Desert Grassland Lizard")) +
   theme(plot.title = element_text(face = "bold", hjust = .5),
@@ -48,6 +49,7 @@ ggplot(lizards, aes(x = spp, y = total_length)) +
 
 ```
 
+## Descriptive Stats
 ```{r}
 # Mean comparissons table
 spp_means <- lizards %>% 
@@ -63,25 +65,59 @@ spp_means <- lizards %>%
 kable(spp_means, 
       caption = "<center><strong>Female Desert Grassland and Colorado Checkered Lizards</strong></center>",
       col = c("Species", "Mean (mm)", "Standard Deviation (mm)", "Sample Size")) %>% 
-  kable_styling(full_width = FALSE,
+  kable_minimal(full_width = FALSE,
                 position = "left")
   
 ```
 
 ```{r}
-# create vectors to explore normality between species lengths
+# CNTE vector
+cnte_len <- lizards %>% 
+  filter(spp == "CNTE") %>% 
+  pull(total_length)
 
-## To do for this task 
-## 1. create vectors
-## 2. normal graphs, hist, QQ
-## 3. two tailed test and cohens.d
-## talk about it 
+# CNUN vector
+cnun_len <- lizards %>% 
+  filter(spp == "CNUN") %>% 
+  drop_na(total_length) %>% 
+  pull(total_length)
+```
+
+```{r, include = FALSE}
+# exploratory graphs to find normality 
+# CNTE looks relatively normal
+hist(cnte_len)
+qqnorm(cnte_len)
+# CNUN looks relatively normal
+hist(cnun_len)
+qqnorm(cnun_len)
+```
+
+```{r}
+# use two-sampled t-test to test for significant difference in means
+t_test_len <- t.test(cnte_len, cnun_len) %>% 
+  tidy()
+
+# run cohens d on the vectors to measure effect size
+cohen_d_len <- cohen.d(cnte_len, cnun_len)
+
+# mean difference between spp to reference below
+cnte_len_mean <- round(mean(cnte_len), 2)
+cnun_len_mean <- round(mean(cnun_len), 2)
+len_mean_diff <- round(cnte_len_mean - cnun_len_mean)
+
+# sd difference between spp to reference below
+cnte_len_sd <- round(sd(cnte_len), 2)
+cnun_len_sd <- round(sd(cnun_len), 2)
+
+# Note: CNTE ~ Desert Grassland Lizard, CNUN ~ Colorado Checkered Lizard
+
 ```
 
 
+***Mean Comparison: *** On average, female Desert Grassland Lizards are longer than female Colorado Checkered Lizards (`r cnte_len_mean` $\pm$ `r cnte_len_sd` and `r cnun_len_mean` $\pm$ `r cnun_len_sd`, respectively; mean $\pm$ 1 standard deviation). The absolute difference in mean lengths between the species of `r len_mean_diff` is significant (Welchs two-sample t-test t(`r round(t_test_len$parameter,2)`) = `r round(t_test_len$statistic,2)`, p.val < .001), though the effect size is only moderate (Cohen's d = `r round(cohen_d_len$estimate,2)`).
 
-
-
+***Data Citation: *** Lightfoot, D. 2017. Lizard pitfall trap data (LTER-II, LTER-III) ver 36. Environmental Data Initiative. https://doi.org/10.6073/pasta/ff37b4cace16a9943575f3fd7067064e 
 
 
 
