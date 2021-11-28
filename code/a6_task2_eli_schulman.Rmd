@@ -20,13 +20,13 @@ library(kableExtra)
 # read in original data
 surveys <- read_csv(here("data","conservation_survey.csv")) 
 
-# create simple df for just librals and conservatives
+# create simple df for just liberals and conservatives
 surveys_clean <- surveys %>% 
   clean_names() %>% 
   select(env_id, pol_or) %>% 
   mutate(affiliation = case_when(
     pol_or %in% c(1:3) ~ "Conservative",
-    pol_or %in% c(5:7) ~ "Libral"
+    pol_or %in% c(5:7) ~ "Liberal"
   )) %>% 
   mutate(env_id = case_when(
     env_id == 1 ~ "Yes",
@@ -69,7 +69,7 @@ pol_env_x2 <- chisq.test(pol_env_counts)
 pol_env_tidy <- tidy(pol_env_x2)
 ```
 
-***Interpretation: *** There is a significant association between one's political party and whether they consider themselves an environmentalist ($\chi$^2^(`r pol_env_tidy$parameter`) = `r round(pol_env_tidy$statistic, 2)`. *p* `r ifelse(pol_env_tidy$p.value < .001, paste("< .001"), paste(" = ", pol_env_tidy$p.value))`). Of conservatives surveyed, only `r pol_env[1,2]` self-identified as environmentalists, while `r pol_env[1,3]` responded that they were not environmentalists and `r pol_env[1,4]` responded as "unsure". Alternatively, of librals surveyed, `r pol_env[2,2]` self-identified as environmentalists, while `r pol_env[2,3]` and `r pol_env[2,4]` responded as "no" or "unsure" to the question.
+***Interpretation: *** There is a significant association between one's political party and whether they consider themselves an environmentalist ($\chi$^2^(`r pol_env_tidy$parameter`) = `r round(pol_env_tidy$statistic, 2)`. *p* `r ifelse(pol_env_tidy$p.value < .001, paste("< .001"), paste(" = ", pol_env_tidy$p.value))`). Of conservatives surveyed, only `r pol_env[1,2]` self-identified as environmentalists, while `r pol_env[1,3]` responded that they were not environmentalists and `r pol_env[1,4]` responded as "unsure". Alternatively, of liberals surveyed, `r pol_env[2,2]` self-identified as environmentalists, while `r pol_env[2,3]` and `r pol_env[2,4]` responded as "no" or "unsure" to the question.
 
 ***Data citation: *** Andrews Forest LTER Site and C. Batavia. 2019. Influences on charitable giving for conservation: Online survey data of 1,331 respondents across the US, August 2017 ver 3. Environmental Data Initiative. https://doi.org/10.6073/pasta/926e6270e324a1322a900da14d38b96c
 
