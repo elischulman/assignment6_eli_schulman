@@ -1,0 +1,90 @@
+---
+title: "Mono Lake Water Levels (1850-2017)"
+author: "Eli Schulman"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+library(tidyverse)
+library(here)
+library(janitor)
+library(broom)
+```
+
+```{r}
+# og data
+mono <- read_csv(here("data", "mono_lake_annual_levels.csv"), skip = 5)
+
+# clean for visualization
+mono_level <- mono %>% 
+  clean_names() %>% 
+  rename(lake_level = lake_level_feet_above_sea_level)
+
+# create vector for points to call out on graph
+mono_callout <- mono_level %>% 
+  select(year, lake_level) %>% 
+  filter(year %in% c(1941, 1963, 2017))
+```
+
+```{r}
+ggplot(mono_level, aes(x = year, y = lake_level)) +
+# manually set limits for y-axis
+  ylim(6340, max(mono_level$lake_level) + 5) +
+# graph the line referenced in the ggplot()
+  geom_line() +
+# add a line for another variable
+  geom_line(aes(x = year, y = stable_level),
+            linetype = "longdash",
+            color = "blue") +
+# create rectangle for begining of land bridges for cayote access
+  geom_rect(aes(ymin = 6360, ymax = 6377, 
+                xmin = min(mono_level$year), xmax = max(mono_level$year)),
+            fill = "orange2",
+            alpha = .01) +
+# create rectangle for beggining of salinity levels (120 g/L)
+  geom_rect(aes(ymin = 6350, ymax = 6360, 
+                xmin = min(mono_level$year), xmax = max(mono_level$year)),
+            fill = "orange3", 
+            alpha = .01) +
+# create rectangle for acute effects from salinity levels (150 g/L)
+geom_rect(aes(ymin = 6340, ymax = 6350, 
+                xmin = min(mono_level$year), xmax = max(mono_level$year)),
+          fill = "orange4", 
+          alpha = .05) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = .5, 
+                                  face = "bold",
+                                  size = 15)) +
+# change axis ticks
+  scale_x_continuous(breaks = seq(1850, 2020, 20)) +
+# create annotations 
+  annotate("text", x = 1850, y = 6375,
+           label = "Land Bridges Form", hjust = 0) +
+  annotate("text", x = 1850, y = 6358,
+           label = "Shrimp Populations Affected", hjust = 0) +
+  annotate("text", x = 1850, y = 6348,
+           label = "Shrimp Populations Severvely Affected", hjust = 0) +
+  annotate("text", x = 1965, y = 6395,
+           label = "Stability Level = 6392 ft", hjust = 0) +
+# add labels
+  labs(x = "Year",
+       y = "Feet Above Sea Level")
+
+
+```
+
+***Figure 1: *** Shows the water level of Mono Lake, measured in feet above sea level. The water level crosses the stability level (6392 ft) in 1963, following a downward trend resulting from water being diverted to Los Angeles in 1941. At 6377 ft, land bridges begin to form in the lake, allowing predators (e.g. coyotes) to access bird nesting sites on islands in the lake. Brine Shrimp populations begin to be affected, and are acutely affected at 6360 ft and 6350 ft respectively. 
+
+
+
+
+
+
+
+
+
+
+
+
+
