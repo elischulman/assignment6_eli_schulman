@@ -40,7 +40,6 @@ ggplot(lizards, aes(x = spp, y = total_length)) +
   labs(title = "Female Colorado Checkered vs Desert Grassland Lizards",
        x = "Species",
        y = "Length (mm)",
-       caption = str_wrap("Figure 1: Shows the distribution in lengths between females in the two lizard species sampled at the Jornada Basin. The mean length of each species is represented by the golden diamond. "),
        color = "Species") +
   scale_x_discrete(labels = c("Colorado Checkered Lizard", "Desert Grassland Lizard")) +
   theme(plot.title = element_text(face = "bold", hjust = .5),
@@ -48,6 +47,8 @@ ggplot(lizards, aes(x = spp, y = total_length)) +
   scale_colour_manual(values = c("red", "blue"))
 
 ```
+
+***Figure 1: ***Shows the distribution in lengths between females in the two lizard species sampled at the Jornada Basin. The mean length of each species is represented by the golden diamond.
 
 ## Descriptive Stats
 ```{r}
